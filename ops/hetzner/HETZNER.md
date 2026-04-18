@@ -6,6 +6,9 @@ Your OpenClaw gateway runs as a **user systemd** service and listens on its own 
 
 **Example — `theworldagency.uk` (Cloudflare):** create an **`A`** record **`age`** → **`5.78.183.141`** (grey cloud / DNS-only for first TLS via certbot on the box). When `dig +short age.theworldagency.uk A` returns the IP, run `setup-nginx-tls.sh age.theworldagency.uk your@email.com`. Use apex `@` instead of `age` if you want `https://theworldagency.uk` only.
 
+**Automate the A record (optional):** create an API token (*Edit zone DNS* for `theworldagency.uk`), then on your Mac from the repo:  
+`export CLOUDFLARE_API_TOKEN='…' && bash ops/hetzner/cloudflare-add-age-a-record.sh`
+
 ## 1. PostgreSQL
 
 AGE needs **`DATABASE_URL`** for users, workspaces, runs, posts, metrics, and Stripe state.
