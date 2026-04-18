@@ -113,7 +113,8 @@ Set at minimum:
 - At least one OAuth provider: `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` and/or `GITHUB_ID` / `GITHUB_SECRET`
 - `OPENROUTER_API_KEY` (recommended) or `OPENAI_API_KEY` — see `lib/llm.ts`
 - `REDIS_URL` (e.g. `redis://127.0.0.1:6379`)
-- `AYRSHARE_API_KEY` (optional until you want live posts)
+- `ZERNIO_API_KEY` + `ZERNIO_PROFILE_ID` **or** `ZERNIO_TARGETS_JSON` (optional; live posts via Zernio — preferred if set)
+- `AYRSHARE_API_KEY` (optional; only if Zernio unset)
 
 **Stripe (optional):** `STRIPE_SECRET_KEY`, `STRIPE_PRICE_PRO_MONTHLY`, `STRIPE_WEBHOOK_SECRET`, and configure a Stripe webhook endpoint → `https://your-domain/api/stripe/webhook`.
 

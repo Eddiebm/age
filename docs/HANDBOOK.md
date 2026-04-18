@@ -95,7 +95,9 @@ See **`.env.example`** in repo. Production highlights:
 | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | Optional; Google OAuth |
 | `OPENROUTER_API_KEY` | Engine (preferred) — OpenRouter |
 | `OPENAI_API_KEY` | Engine fallback — OpenAI direct if OpenRouter unset |
-| `AYRSHARE_API_KEY` | Optional; live social posts |
+| `ZERNIO_API_KEY` | Optional; live posts via [Zernio](https://zernio.com/) (**preferred** if set) |
+| `ZERNIO_PROFILE_ID` or `ZERNIO_TARGETS_JSON` | Required with Zernio key — see `.env.example` |
+| `AYRSHARE_API_KEY` | Optional; used only if `ZERNIO_API_KEY` unset |
 | Stripe vars | Optional; Pro billing |
 
 **Patch OAuth keys only (server):**

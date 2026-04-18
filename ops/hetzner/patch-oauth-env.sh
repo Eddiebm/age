@@ -6,6 +6,7 @@
 #   export GOOGLE_CLIENT_SECRET='...'
 #   export GITHUB_ID='...'
 #   export GITHUB_SECRET='...'
+#   export ZERNIO_API_KEY='sk_...'            # https://zernio.com — plus ZERNIO_PROFILE_ID or ZERNIO_TARGETS_JSON
 #   export OPENROUTER_API_KEY='sk-or-v1-...'   # https://openrouter.ai/keys (recommended)
 #   export OPENAI_API_KEY='sk-...'             # optional fallback: OpenAI direct
 #   bash /opt/age/ops/hetzner/patch-oauth-env.sh
@@ -33,6 +34,10 @@ keys = [
     "OPENROUTER_BASE_URL",
     "OPENROUTER_HTTP_REFERER",
     "OPENROUTER_APP_TITLE",
+    "ZERNIO_API_KEY",
+    "ZERNIO_PROFILE_ID",
+    "ZERNIO_TARGETS_JSON",
+    "ZERNIO_API_BASE",
 ]
 incoming = {k: os.environ.get(k, "").strip() for k in keys}
 if not any(incoming.values()):

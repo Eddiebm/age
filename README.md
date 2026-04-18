@@ -10,7 +10,7 @@ Multi-tenant growth OS: **OAuth → workspaces → engine runs → Postgres → 
 - **Data:** PostgreSQL + Prisma (`EngineRun`, `GeneratedPost`, `PostMetric`, billing)
 - **Queue:** BullMQ + Redis (scoped jobs: `postId` + `workspaceId` + `body`)
 - **AI:** OpenRouter (default) or OpenAI — `lib/llm.ts` + `contentAgent` (`openai/gpt-4o-mini` on OpenRouter)
-- **Distribution:** [Ayrshare](https://www.ayrshare.com/) (`POST https://api.ayrshare.com/api/post`)
+- **Distribution:** [Zernio](https://zernio.com/) if `ZERNIO_API_KEY`, else [Ayrshare](https://www.ayrshare.com/)
 - **Billing:** Stripe Checkout, Customer Portal, webhooks → `Workspace.plan` (`FREE` | `PRO`)
 
 ## Local setup
