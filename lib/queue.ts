@@ -17,6 +17,12 @@ export function createRedisConnection(): IORedis {
   });
 }
 
+export type PublishJob = {
+  postId: string;
+  workspaceId: string;
+  body: string;
+};
+
 const globalForQueue = globalThis as unknown as {
   __ageQueue?: Queue;
   __ageRedis?: IORedis;
@@ -31,9 +37,9 @@ export function getQueue(): Queue {
   return globalForQueue.__ageQueue;
 }
 
-export async function enqueue(posts: string[]): Promise<void> {
+export async function enqueuePublishJobs(jobs: PublishJob[]): Promise<void> {
   const queue = getQueue();
-  for (const post of posts) {
-    await queue.add("publish", { post });
+  for (const job of jobs) {
+    await queue.add("publish", job);
   }
 }

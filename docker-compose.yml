@@ -1,0 +1,32 @@
+# Local Postgres + Redis for development.
+# DATABASE_URL=postgresql://age:age@localhost:5432/age
+# REDIS_URL=redis://127.0.0.1:6379
+#
+# docker compose up -d
+# npx prisma db push
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: age
+      POSTGRES_PASSWORD: age
+      POSTGRES_DB: age
+    ports:
+      - "5432:5432"
+    volumes:
+      - age-pg:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - age-redis:/data
+
+volumes:
+  age-pg:
+  age-redis:

@@ -4,7 +4,32 @@ Your OpenClaw gateway runs as a **user systemd** service and listens on its own 
 
 **Server (from agent setup):** `ssh -i ~/.ssh/id_ed25519 root@5.78.183.141` — Ubuntu 24.04.
 
-## 1. Redis
+## 1. PostgreSQL
+
+AGE needs **`DATABASE_URL`** for users, workspaces, runs, posts, metrics, and Stripe state.
+
+**Option A — managed (Neon, Supabase, RDS, etc.)**  
+Create a database, then set `DATABASE_URL` in `/opt/age/.env`.
+
+**Option B — apt on the same VPS**
+
+```bash
+apt-get install -y postgresql
+sudo -u postgres psql -c "CREATE USER age WITH PASSWORD 'choose-a-strong-password';"
+sudo -u postgres psql -c "CREATE DATABASE age OWNER age;"
+```
+
+`DATABASE_URL=postgresql://age:choose-a-strong-password@127.0.0.1:5432/age`
+
+Apply schema:
+
+```bash
+cd /opt/age
+npx prisma db push
+# or: npx prisma migrate deploy   # if you use migrations in CI
+```
+
+## 2. Redis
 
 Pick one:
 
@@ -25,7 +50,7 @@ docker compose -f /opt/age/ops/hetzner/docker-compose.redis.yml up -d
 
 Use the same `REDIS_URL`.
 
-## 2. Node.js 20+
+## 3. Node.js 20+
 
 ```bash
 curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
@@ -33,7 +58,7 @@ apt-get install -y nodejs build-essential
 node -v
 ```
 
-## 3. App directory
+## 4. App directory
 
 ```bash
 mkdir -p /opt/age
@@ -52,7 +77,7 @@ git clone <your-repo-url> .
 rsync -avz --exclude node_modules --exclude .git ./age/ root@5.78.183.141:/opt/age/
 ```
 
-## 4. Environment
+## 5. Environment
 
 ```bash
 cp /opt/age/.env.example /opt/age/.env
@@ -61,9 +86,15 @@ nano /opt/age/.env
 
 Set at minimum:
 
+- `DATABASE_URL` (PostgreSQL)
+- `NEXTAUTH_SECRET` (e.g. `openssl rand -base64 32`)
+- `NEXTAUTH_URL` (public URL of this app, e.g. `https://age.yourdomain.com`)
+- At least one OAuth provider: `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` and/or `GITHUB_ID` / `GITHUB_SECRET`
 - `OPENAI_API_KEY`
 - `REDIS_URL` (e.g. `redis://127.0.0.1:6379`)
 - `AYRSHARE_API_KEY` (optional until you want live posts)
+
+**Stripe (optional):** `STRIPE_SECRET_KEY`, `STRIPE_PRICE_PRO_MONTHLY`, `STRIPE_WEBHOOK_SECRET`, and configure a Stripe webhook endpoint → `https://your-domain/api/stripe/webhook`.
 
 If you copied `.env.example`, replace the **empty** `REDIS_URL=` line (systemd will not override with a later duplicate):
 
@@ -74,7 +105,7 @@ systemctl restart age-worker
 
 Do **not** commit `.env`.
 
-## 5. Build and prune
+## 6. Build and prune
 
 ```bash
 cd /opt/age
@@ -85,7 +116,7 @@ npm prune --omit=dev
 
 `postbuild` copies `.next/static` into the standalone bundle so assets load correctly.
 
-## 6. systemd (system, not user — separate from OpenClaw)
+## 7. systemd (system, not user — separate from OpenClaw)
 
 ```bash
 cp /opt/age/ops/hetzner/age-web.service /etc/systemd/system/age-web.service
@@ -101,7 +132,7 @@ Logs:
 journalctl -u age-web -u age-worker -f --no-pager
 ```
 
-## 7. Nginx + TLS (recommended)
+## 8. Nginx + TLS (recommended)
 
 Copy `nginx-age.conf.example`, set `server_name`, point `ssl_certificate` paths (e.g. Let’s Encrypt), then:
 
@@ -109,7 +140,7 @@ Copy `nginx-age.conf.example`, set `server_name`, point `ssl_certificate` paths 
 nginx -t && systemctl reload nginx
 ```
 
-## 8. Firewall
+## 9. Firewall
 
 If you use UFW, allow SSH + 80/443; **do not** expose Redis `6379` publicly.
 
@@ -120,7 +151,7 @@ ufw allow 443/tcp
 ufw enable
 ```
 
-## 9. Updates
+## 10. Updates
 
 ```bash
 cd /opt/age

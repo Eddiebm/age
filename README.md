@@ -2,47 +2,56 @@
 
 **Repository:** [github.com/Eddiebm/age](https://github.com/Eddiebm/age)
 
-Self-improving, event-driven, multi-agent growth loop: **create → score → queue → distribute → learn**.
+Multi-tenant growth OS: **OAuth → workspaces → engine runs → Postgres → BullMQ → publish → metrics**, with **Stripe** for SaaS and the same app for **your brands** and **paying customers**.
 
 ## Stack
 
-- **Frontend:** Next.js 14 (App Router)
-- **Queue:** BullMQ + Redis
+- **App:** Next.js 14 (App Router), NextAuth (Google / GitHub), middleware
+- **Data:** PostgreSQL + Prisma (`EngineRun`, `GeneratedPost`, `PostMetric`, billing)
+- **Queue:** BullMQ + Redis (scoped jobs: `postId` + `workspaceId` + `body`)
 - **AI:** OpenAI (`gpt-4o-mini` in `contentAgent`)
 - **Distribution:** [Ayrshare](https://www.ayrshare.com/) (`POST https://api.ayrshare.com/api/post`)
+- **Billing:** Stripe Checkout, Customer Portal, webhooks → `Workspace.plan` (`FREE` | `PRO`)
 
-## Setup
+## Local setup
 
-```bash
-cp .env.example .env
-# Set OPENAI_API_KEY and REDIS_URL (and optionally AYRSHARE_API_KEY)
-npm install
-```
+1. **Postgres + Redis** (repo includes `docker-compose.yml`):
 
-## Run
+   ```bash
+   docker compose up -d
+   cp .env.example .env
+   # Set DATABASE_URL, REDIS_URL, NEXTAUTH_SECRET, NEXTAUTH_URL=http://localhost:3000
+   # Add at least one OAuth provider (Google and/or GitHub)
+   # OPENAI_API_KEY — required to run the engine
+   ```
 
-Terminal 1 — web app:
+2. **Schema:**
 
-```bash
-npm run dev
-```
+   ```bash
+   npm install
+   npx prisma db push
+   ```
 
-Terminal 2 — worker (consumes `posts` queue; required for jobs to run):
+3. **Run:**
 
-```bash
-npm run worker
-```
+   ```bash
+   npm run dev
+   npm run worker   # second terminal; needs DATABASE_URL + REDIS_URL
+   ```
 
-Open [http://localhost:3000](http://localhost:3000), enter a topic, and submit. The API runs the orchestrator (strategy → content → scoring → enqueue). The worker picks up jobs and calls the distribution agent.
+4. Open [http://localhost:3000](http://localhost:3000) → **Sign in** → **Dashboard** → run the engine.
+
+**Optional — Stripe:** set `STRIPE_SECRET_KEY`, `STRIPE_PRICE_PRO_MONTHLY`, `STRIPE_WEBHOOK_SECRET`, and point a Stripe webhook to `/api/stripe/webhook` (local: Stripe CLI).
+
+**Free tier:** `AGE_FREE_RUNS_PER_MONTH` (default `10`) applies per workspace on `FREE`; `PRO` skips that limit.
 
 ## Deploy
 
-- **Next.js:** Vercel (set `REDIS_URL`, `OPENAI_API_KEY`, `AYRSHARE_API_KEY` in project env).
-- **Worker:** Long-running process on Railway, Fly.io, or similar with the same env vars; run `npm run worker`.
-- **Hetzner (same box as OpenClaw):** see [ops/hetzner/HETZNER.md](ops/hetzner/HETZNER.md) — systemd units, Redis, nginx, and updates. OpenClaw and AGE use different services; no port conflict if AGE stays on `127.0.0.1:3000` behind nginx.
+- **Vercel / Railway-style:** set all env vars from `.env.example`; run **worker** as a separate long-lived process with the same env.
+- **Hetzner + OpenClaw:** [ops/hetzner/HETZNER.md](ops/hetzner/HETZNER.md) — Redis, **PostgreSQL**, systemd, nginx. Give **both** `age-web` and `age-worker` the same `.env` (including `DATABASE_URL`).
 
 ## Caveats
 
-- Social APIs (X, LinkedIn, etc.) require linked accounts and approvals in Ayrshare.
-- Use a Redis instance with **no eviction** (or careful memory limits) for BullMQ reliability.
-- Learning/optimization compounds only with **real** engagement data wired into `analyticsAgent` / `optimizer` / `agentBrain`.
+- Ayrshare + linked social accounts required for live posts; without `AYRSHARE_API_KEY` the worker logs/skips publish.
+- Redis should use **no eviction** (or careful limits) for BullMQ.
+- `optimizer` / `agentBrain` are ready to consume **real** metrics; today’s `analyticsAgent` is still a stub you can swap for provider APIs.

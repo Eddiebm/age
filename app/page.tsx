@@ -1,69 +1,67 @@
-"use client";
+import Link from "next/link";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 
-import { useState } from "react";
-
-export default function Home() {
-  const [status, setStatus] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
-
-  async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    const form = e.currentTarget;
-    const topic = new FormData(form).get("topic") as string;
-    if (!topic?.trim()) return;
-    setLoading(true);
-    setStatus(null);
-    try {
-      const res = await fetch("/api/run", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ topic: topic.trim() }),
-      });
-      const data = (await res.json()) as { status?: string; error?: string };
-      setStatus(data.error ?? data.status ?? "unknown");
-    } catch {
-      setStatus("request failed");
-    } finally {
-      setLoading(false);
-    }
-  }
+export default async function Home() {
+  const session = await getServerSession(authOptions);
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-xl flex-col gap-8 p-10">
-      <div>
-        <h1 className="text-3xl font-semibold tracking-tight">
+    <main className="mx-auto flex min-h-screen max-w-3xl flex-col justify-center gap-10 px-6 py-16">
+      <div className="space-y-4">
+        <p className="text-sm font-medium uppercase tracking-widest text-emerald-500/90">
           Autonomous Growth Engine
+        </p>
+        <h1 className="text-4xl font-semibold tracking-tight text-white sm:text-5xl">
+          Run your growth loop like infrastructure.
         </h1>
-        <p className="mt-2 text-sm text-zinc-400">
-          Closed-loop: create → score → queue → distribute → learn.
+        <p className="max-w-2xl text-lg text-zinc-400">
+          One system for your brands and for paying customers: strategy →
+          generation → scoring → BullMQ → distribution → metrics in Postgres —
+          with OAuth, workspaces, Stripe Pro, and free-tier guardrails.
         </p>
       </div>
 
-      <form onSubmit={onSubmit} className="flex flex-col gap-4">
-        <label className="text-sm font-medium text-zinc-300">
-          Topic
-          <input
-            name="topic"
-            placeholder="Enter topic"
-            className="mt-1 w-full rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2 text-zinc-100 outline-none ring-zinc-600 placeholder:text-zinc-600 focus:ring-2"
-            disabled={loading}
-            required
-          />
-        </label>
-        <button
-          type="submit"
-          disabled={loading}
-          className="rounded-lg bg-emerald-600 px-4 py-2 font-medium text-white transition hover:bg-emerald-500 disabled:opacity-50"
+      <div className="flex flex-wrap gap-4">
+        {session ? (
+          <Link
+            href="/dashboard"
+            className="rounded-lg bg-emerald-600 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-emerald-500"
+          >
+            Open dashboard
+          </Link>
+        ) : (
+          <Link
+            href="/login"
+            className="rounded-lg bg-emerald-600 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-emerald-500"
+          >
+            Sign in
+          </Link>
+        )}
+        <a
+          href="https://github.com/Eddiebm/age"
+          className="rounded-lg border border-zinc-700 px-5 py-2.5 text-sm font-medium text-zinc-200 transition hover:border-zinc-500"
+          target="_blank"
+          rel="noreferrer"
         >
-          {loading ? "Running…" : "Run Engine"}
-        </button>
-      </form>
+          View source
+        </a>
+      </div>
 
-      {status ? (
-        <p className="rounded-lg border border-zinc-800 bg-zinc-900/60 px-3 py-2 text-sm text-zinc-300">
-          Status: <span className="font-mono text-emerald-400">{status}</span>
-        </p>
-      ) : null}
+      <ul className="grid gap-4 sm:grid-cols-2">
+        {[
+          "Workspaces for internal brands + SaaS tenants",
+          "NextAuth (Google / GitHub) + role-based access",
+          "Stripe Checkout + Customer Portal + webhooks",
+          "Engine runs + posts + metrics persisted in PostgreSQL",
+        ].map((text) => (
+          <li
+            key={text}
+            className="rounded-xl border border-zinc-800 bg-zinc-900/40 px-4 py-3 text-sm text-zinc-300"
+          >
+            {text}
+          </li>
+        ))}
+      </ul>
     </main>
   );
 }

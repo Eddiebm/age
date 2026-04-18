@@ -3,6 +3,9 @@ const nextConfig = {
   reactStrictMode: true,
   /** Smallest production deploy on VPS (Hetzner, etc.): `node .next/standalone/server.js` */
   output: "standalone",
+  experimental: {
+    serverComponentsExternalPackages: ["@prisma/client", "prisma"],
+  },
 };
 
 export default nextConfig;

@@ -1,15 +1,38 @@
 import "dotenv/config";
 import { Worker } from "bullmq";
 import { createRedisConnection } from "./queue";
+import type { PublishJob } from "./queue";
 import { distributionAgent } from "./agents/distributionAgent";
+import { prisma } from "./db";
+import { analyticsAgent } from "./agents/analyticsAgent";
 
 const connection = createRedisConnection();
 
 const worker = new Worker(
   "posts",
   async (job) => {
-    const post = job.data.post as string;
-    await distributionAgent(post);
+    const { postId, body } = job.data as PublishJob;
+    try {
+      await distributionAgent(body);
+      await prisma.generatedPost.update({
+        where: { id: postId },
+        data: { status: "published" },
+      });
+      const m = await analyticsAgent(postId);
+      await prisma.postMetric.create({
+        data: {
+          postId,
+          impressions: Math.round(m.impressions),
+          engagement: m.engagement,
+        },
+      });
+    } catch (e) {
+      await prisma.generatedPost.update({
+        where: { id: postId },
+        data: { status: "failed" },
+      });
+      throw e;
+    }
   },
   { connection },
 );
