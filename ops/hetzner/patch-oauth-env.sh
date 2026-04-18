@@ -1,11 +1,12 @@
 #!/usr/bin/env bash
-# Merge OAuth vars into /opt/age/.env (replaces existing keys when set).
+# Merge OAuth + OpenAI API key into /opt/age/.env (replaces existing keys when set).
 #
 # On the server, with values exported in the same shell:
 #   export GOOGLE_CLIENT_ID='...'
 #   export GOOGLE_CLIENT_SECRET='...'
 #   export GITHUB_ID='...'
 #   export GITHUB_SECRET='...'
+#   export OPENAI_API_KEY='sk-...'   # https://platform.openai.com/api-keys
 #   bash /opt/age/ops/hetzner/patch-oauth-env.sh
 #
 set -euo pipefail
@@ -25,10 +26,16 @@ keys = [
     "GOOGLE_CLIENT_SECRET",
     "GITHUB_ID",
     "GITHUB_SECRET",
+    "OPENAI_API_KEY",
 ]
 incoming = {k: os.environ.get(k, "").strip() for k in keys}
 if not any(incoming.values()):
-    print("Set at least one OAuth variable in the environment.", file=sys.stderr)
+    print(
+        "Set at least one of: "
+        + ", ".join(keys)
+        + " in the environment.",
+        file=sys.stderr,
+    )
     sys.exit(1)
 
 with open(path, "r", encoding="utf-8") as f:
