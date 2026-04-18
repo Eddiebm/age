@@ -1,5 +1,7 @@
 # Autonomous Growth Engine (AGE)
 
+**Repository:** [github.com/Eddiebm/age](https://github.com/Eddiebm/age)
+
 Self-improving, event-driven, multi-agent growth loop: **create → score → queue → distribute → learn**.
 
 ## Stack
