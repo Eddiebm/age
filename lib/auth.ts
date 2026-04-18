@@ -25,6 +25,7 @@ if (process.env.GITHUB_ID && process.env.GITHUB_SECRET) {
 }
 
 export const authOptions: NextAuthOptions = {
+  secret: process.env.NEXTAUTH_SECRET,
   adapter: PrismaAdapter(prisma) as NextAuthOptions["adapter"],
   session: { strategy: "jwt", maxAge: 30 * 24 * 60 * 60 },
   providers,
