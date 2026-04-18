@@ -36,7 +36,8 @@ Open [http://localhost:3000](http://localhost:3000), enter a topic, and submit. 
 ## Deploy
 
 - **Next.js:** Vercel (set `REDIS_URL`, `OPENAI_API_KEY`, `AYRSHARE_API_KEY` in project env).
-- **Worker:** Long-running process on Railway, Fly.io, or similar with the same env vars; run `npm run worker` (or `node` after build — use `tsx`/`ts-node` or compile worker to JS).
+- **Worker:** Long-running process on Railway, Fly.io, or similar with the same env vars; run `npm run worker`.
+- **Hetzner (same box as OpenClaw):** see [ops/hetzner/HETZNER.md](ops/hetzner/HETZNER.md) — systemd units, Redis, nginx, and updates. OpenClaw and AGE use different services; no port conflict if AGE stays on `127.0.0.1:3000` behind nginx.
 
 ## Caveats
 
