@@ -65,6 +65,13 @@ Set at minimum:
 - `REDIS_URL` (e.g. `redis://127.0.0.1:6379`)
 - `AYRSHARE_API_KEY` (optional until you want live posts)
 
+If you copied `.env.example`, replace the **empty** `REDIS_URL=` line (systemd will not override with a later duplicate):
+
+```bash
+sed -i 's|^REDIS_URL=.*|REDIS_URL=redis://127.0.0.1:6379|' /opt/age/.env
+systemctl restart age-worker
+```
+
 Do **not** commit `.env`.
 
 ## 5. Build and prune
