@@ -1,4 +1,4 @@
-import OpenAI from "openai";
+import { createChatClient } from "@/lib/llm";
 
 function splitPosts(raw: string): string[] {
   const lines = raw
@@ -13,15 +13,10 @@ function splitPosts(raw: string): string[] {
 }
 
 export async function contentAgent(strategy: string): Promise<string[]> {
-  const apiKey = process.env.OPENAI_API_KEY;
-  if (!apiKey) {
-    throw new Error("OPENAI_API_KEY is not set");
-  }
-
-  const client = new OpenAI({ apiKey });
+  const { client, model } = createChatClient();
 
   const res = await client.chat.completions.create({
-    model: "gpt-4o-mini",
+    model,
     messages: [
       {
         role: "user",

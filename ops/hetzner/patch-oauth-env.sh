@@ -6,7 +6,8 @@
 #   export GOOGLE_CLIENT_SECRET='...'
 #   export GITHUB_ID='...'
 #   export GITHUB_SECRET='...'
-#   export OPENAI_API_KEY='sk-...'   # https://platform.openai.com/api-keys
+#   export OPENROUTER_API_KEY='sk-or-v1-...'   # https://openrouter.ai/keys (recommended)
+#   export OPENAI_API_KEY='sk-...'             # optional fallback: OpenAI direct
 #   bash /opt/age/ops/hetzner/patch-oauth-env.sh
 #
 set -euo pipefail
@@ -27,6 +28,11 @@ keys = [
     "GITHUB_ID",
     "GITHUB_SECRET",
     "OPENAI_API_KEY",
+    "OPENROUTER_API_KEY",
+    "OPENROUTER_MODEL",
+    "OPENROUTER_BASE_URL",
+    "OPENROUTER_HTTP_REFERER",
+    "OPENROUTER_APP_TITLE",
 ]
 incoming = {k: os.environ.get(k, "").strip() for k in keys}
 if not any(incoming.values()):

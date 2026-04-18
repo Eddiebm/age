@@ -111,7 +111,7 @@ Set at minimum:
 - `NEXTAUTH_SECRET` (e.g. `openssl rand -base64 32`)
 - `NEXTAUTH_URL` (public URL of this app, e.g. `https://age.yourdomain.com`)
 - At least one OAuth provider: `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` and/or `GITHUB_ID` / `GITHUB_SECRET`
-- `OPENAI_API_KEY`
+- `OPENROUTER_API_KEY` (recommended) or `OPENAI_API_KEY` — see `lib/llm.ts`
 - `REDIS_URL` (e.g. `redis://127.0.0.1:6379`)
 - `AYRSHARE_API_KEY` (optional until you want live posts)
 
@@ -204,6 +204,6 @@ sudo bash /opt/age/ops/hetzner/deploy.sh
 
 | Issue | Check |
 |--------|--------|
-| API returns 500 on run | `journalctl -u age-web -n 80`; verify `OPENAI_API_KEY` and `REDIS_URL`. |
+| API returns 500 on run | `journalctl -u age-web -n 80`; verify `OPENROUTER_API_KEY` or `OPENAI_API_KEY` and `REDIS_URL`. |
 | Jobs never publish | `age-worker` running? Redis up? `journalctl -u age-worker -n 80`. |
 | Static assets 404 | Re-run `npm run build` (runs `postbuild`); ensure `WorkingDirectory` in `age-web.service` is `/opt/age/.next/standalone`. |

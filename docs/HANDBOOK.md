@@ -93,7 +93,8 @@ See **`.env.example`** in repo. Production highlights:
 | `REDIS_URL` | e.g. `redis://127.0.0.1:6379` |
 | `GITHUB_ID` / `GITHUB_SECRET` | GitHub OAuth |
 | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | Optional; Google OAuth |
-| `OPENAI_API_KEY` | Engine / agents |
+| `OPENROUTER_API_KEY` | Engine (preferred) — OpenRouter |
+| `OPENAI_API_KEY` | Engine fallback — OpenAI direct if OpenRouter unset |
 | `AYRSHARE_API_KEY` | Optional; live social posts |
 | Stripe vars | Optional; Pro billing |
 
@@ -104,6 +105,8 @@ export GITHUB_ID='...'
 export GITHUB_SECRET='...'
 export GOOGLE_CLIENT_ID='...'   # optional
 export GOOGLE_CLIENT_SECRET='...'
+export OPENROUTER_API_KEY='...'  # https://openrouter.ai/keys
+# optional: export OPENAI_API_KEY='sk-...'  # https://platform.openai.com/api-keys
 bash /opt/age/ops/hetzner/patch-oauth-env.sh
 systemctl restart age-web age-worker
 ```

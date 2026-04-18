@@ -9,7 +9,7 @@ Multi-tenant growth OS: **OAuth → workspaces → engine runs → Postgres → 
 - **App:** Next.js 14 (App Router), NextAuth (Google / GitHub), middleware
 - **Data:** PostgreSQL + Prisma (`EngineRun`, `GeneratedPost`, `PostMetric`, billing)
 - **Queue:** BullMQ + Redis (scoped jobs: `postId` + `workspaceId` + `body`)
-- **AI:** OpenAI (`gpt-4o-mini` in `contentAgent`)
+- **AI:** OpenRouter (default) or OpenAI — `lib/llm.ts` + `contentAgent` (`openai/gpt-4o-mini` on OpenRouter)
 - **Distribution:** [Ayrshare](https://www.ayrshare.com/) (`POST https://api.ayrshare.com/api/post`)
 - **Billing:** Stripe Checkout, Customer Portal, webhooks → `Workspace.plan` (`FREE` | `PRO`)
 
@@ -22,7 +22,7 @@ Multi-tenant growth OS: **OAuth → workspaces → engine runs → Postgres → 
    cp .env.example .env
    # Set DATABASE_URL, REDIS_URL, NEXTAUTH_SECRET, NEXTAUTH_URL=http://localhost:3000
    # Add at least one OAuth provider (Google and/or GitHub)
-   # OPENAI_API_KEY — required to run the engine
+   # OPENROUTER_API_KEY — required to run the engine (or OPENAI_API_KEY for OpenAI direct)
    ```
 
 2. **Schema:**
