@@ -150,11 +150,16 @@ journalctl -u age-web -u age-worker -f --no-pager
 
 ## 8. Nginx + TLS (recommended)
 
-Copy `nginx-age.conf.example`, set `server_name`, point `ssl_certificate` paths (e.g. Let’s Encrypt), then:
+**Automated (after you own a domain and DNS points here):**
 
 ```bash
-nginx -t && systemctl reload nginx
+# Replace with your hostname and email (Let's Encrypt notices).
+sudo bash /opt/age/ops/hetzner/setup-nginx-tls.sh age.example.com you@gmail.com
 ```
+
+This installs **nginx** + **certbot**, proxies to `127.0.0.1:3000`, obtains **HTTPS**, sets **`NEXTAUTH_URL=https://<domain>`** in `/opt/age/.env`, and restarts **age-web** / **age-worker**.
+
+**Manual:** copy `nginx-age.conf.example` to `/etc/nginx/sites-available/age`, set `server_name`, TLS paths, `nginx -t`, reload.
 
 ## 9. Firewall
 
