@@ -3,6 +3,7 @@ import { authOptions } from "@/lib/auth";
 import { runSystem } from "@/lib/orchestrator";
 import { ensureDefaultWorkspace, getMembership } from "@/lib/workspace";
 import { assertCanRunEngine } from "@/lib/limits";
+import { assertRunRateLimit } from "@/lib/ratelimit";
 
 export const maxDuration = 60;
 
@@ -10,6 +11,13 @@ export async function POST(req: Request) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  try {
+    await assertRunRateLimit(session.user.id);
+  } catch (e) {
+    const message = e instanceof Error ? e.message : "rate limited";
+    return Response.json({ error: message }, { status: 429 });
   }
 
   let topic: string | undefined;
@@ -55,7 +63,12 @@ export async function POST(req: Request) {
       workspaceId,
       topic: topic.trim(),
     });
-    return Response.json({ status: "running", runId: result.runId });
+    const awaiting =
+      process.env.AGE_REQUIRE_APPROVAL === "true" || m.workspace.requireApproval;
+    return Response.json({
+      status: awaiting ? "awaiting_approval" : "running",
+      runId: result.runId,
+    });
   } catch (e) {
     const message = e instanceof Error ? e.message : "run failed";
     return Response.json({ error: message }, { status: 500 });

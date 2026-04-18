@@ -162,6 +162,13 @@ npm prune --omit=dev
 systemctl restart age-web age-worker
 ```
 
+Or use the bundled script (same steps, plus `prisma db push`):
+
+```bash
+chmod +x /opt/age/ops/hetzner/deploy.sh
+sudo bash /opt/age/ops/hetzner/deploy.sh
+```
+
 ## OpenClaw
 
 - OpenClaw gateway: `systemctl --user status openclaw-gateway` (runs as `root`’s user session — unrelated to `age-web`).

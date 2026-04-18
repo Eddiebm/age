@@ -13,12 +13,25 @@ const worker = new Worker(
   async (job) => {
     const { postId, body } = job.data as PublishJob;
     try {
-      await distributionAgent(body);
+      const dist = await distributionAgent(body);
+
+      if (dist.skipped) {
+        await prisma.generatedPost.update({
+          where: { id: postId },
+          data: { status: "skipped" },
+        });
+        return;
+      }
+
       await prisma.generatedPost.update({
         where: { id: postId },
-        data: { status: "published" },
+        data: {
+          status: "published",
+          ayrsharePostId: dist.ayrsharePostId ?? null,
+        },
       });
-      const m = await analyticsAgent(postId);
+
+      const m = await analyticsAgent(postId, dist.ayrsharePostId);
       await prisma.postMetric.create({
         data: {
           postId,

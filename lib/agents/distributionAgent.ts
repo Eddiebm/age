@@ -1,6 +1,14 @@
 import axios from "axios";
 
-export async function distributionAgent(post: string): Promise<void> {
+export type DistributionResult = {
+  /** Ayrshare top-level post id from /api/post response */
+  ayrsharePostId?: string;
+  skipped?: boolean;
+};
+
+export async function distributionAgent(
+  post: string,
+): Promise<DistributionResult> {
   const key = process.env.AYRSHARE_API_KEY;
 
   console.log("[distribution] posting:", post.slice(0, 120));
@@ -9,10 +17,10 @@ export async function distributionAgent(post: string): Promise<void> {
     console.warn(
       "[distribution] AYRSHARE_API_KEY not set; skipping live publish (dev mode).",
     );
-    return;
+    return { skipped: true };
   }
 
-  const res = await axios.post<unknown>(
+  const res = await axios.post<Record<string, unknown>>(
     "https://api.ayrshare.com/api/post",
     { post, platforms: ["linkedin", "twitter"] },
     {
@@ -28,4 +36,13 @@ export async function distributionAgent(post: string): Promise<void> {
       `Ayrshare error ${res.status}: ${JSON.stringify(res.data).slice(0, 500)}`,
     );
   }
+
+  const id =
+    typeof res.data?.id === "string"
+      ? res.data.id
+      : typeof (res.data as { postId?: string })?.postId === "string"
+        ? (res.data as { postId: string }).postId
+        : undefined;
+
+  return { ayrsharePostId: id };
 }

@@ -4,11 +4,22 @@ import { contentAgent } from "./agents/contentAgent";
 import { scoringAgent } from "./agents/scoringAgent";
 import { enqueuePublishJobs } from "./queue";
 
+function mustApproveWorkspace(requireApproval: boolean): boolean {
+  if (process.env.AGE_REQUIRE_APPROVAL === "true") return true;
+  return requireApproval;
+}
+
 export async function runSystem(params: {
   workspaceId: string;
   topic: string;
 }): Promise<{ runId: string }> {
   const { workspaceId, topic } = params;
+
+  const workspace = await prisma.workspace.findUniqueOrThrow({
+    where: { id: workspaceId },
+  });
+
+  const approve = mustApproveWorkspace(workspace.requireApproval);
 
   const run = await prisma.engineRun.create({
     data: {
@@ -31,6 +42,8 @@ export async function runSystem(params: {
       .sort((a, b) => b.score - a.score)
       .slice(0, 5);
 
+    const initialStatus = approve ? "pending_approval" : "queued";
+
     const created = await prisma.$transaction(async (tx) => {
       const rows = [];
       for (const x of best) {
@@ -39,7 +52,7 @@ export async function runSystem(params: {
             runId: run.id,
             body: x.post,
             score: x.score,
-            status: "queued",
+            status: initialStatus,
           },
         });
         rows.push(row);
@@ -47,13 +60,15 @@ export async function runSystem(params: {
       return rows;
     });
 
-    await enqueuePublishJobs(
-      created.map((c) => ({
-        postId: c.id,
-        workspaceId,
-        body: c.body,
-      })),
-    );
+    if (!approve) {
+      await enqueuePublishJobs(
+        created.map((c) => ({
+          postId: c.id,
+          workspaceId,
+          body: c.body,
+        })),
+      );
+    }
 
     await prisma.engineRun.update({
       where: { id: run.id },

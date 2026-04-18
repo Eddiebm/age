@@ -23,6 +23,7 @@ export default async function DashboardPage() {
     name: m.workspace.name,
     slug: m.workspace.slug,
     plan: m.workspace.plan,
+    requireApproval: m.workspace.requireApproval,
     role: m.role,
     stripeCustomerId: m.workspace.stripeCustomerId,
     subscription: m.workspace.subscription
