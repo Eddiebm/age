@@ -1,0 +1,19 @@
+[Unit]
+Description=AGE — Next.js standalone (Autonomous Growth Engine)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/age/.next/standalone
+EnvironmentFile=-/opt/age/.env
+Environment=NODE_ENV=production
+Environment=HOSTNAME=127.0.0.1
+Environment=PORT=3000
+ExecStart=/usr/bin/node server.js
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

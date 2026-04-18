@@ -1,0 +1,17 @@
+# Optional: Redis only (if you prefer Docker over apt install redis-server).
+# Usage: docker compose -f ops/hetzner/docker-compose.redis.yml up -d
+#
+# REDIS_URL on the host: redis://127.0.0.1:6379
+
+services:
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:6379:6379"
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - age-redis-data:/data
+
+volumes:
+  age-redis-data:

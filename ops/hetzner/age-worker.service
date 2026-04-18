@@ -1,0 +1,17 @@
+[Unit]
+Description=AGE — BullMQ worker (publish queue)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/age
+EnvironmentFile=-/opt/age/.env
+Environment=NODE_ENV=production
+ExecStart=/opt/age/node_modules/.bin/tsx lib/worker.ts
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

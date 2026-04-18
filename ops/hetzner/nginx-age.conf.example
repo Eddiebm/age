@@ -1,0 +1,30 @@
+# Example: reverse proxy + TLS (adjust server_name and cert paths).
+# Install: copy to /etc/nginx/sites-available/age, symlink sites-enabled, nginx -t, reload.
+
+upstream age_next {
+    server 127.0.0.1:3000;
+    keepalive 64;
+}
+
+server {
+    listen 443 ssl http2;
+    server_name age.example.com;
+
+    # ssl_certificate /etc/letsencrypt/live/age.example.com/fullchain.pem;
+    # ssl_certificate_key /etc/letsencrypt/live/age.example.com/privkey.pem;
+
+    location / {
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_pass http://age_next;
+    }
+}
+
+server {
+    listen 80;
+    server_name age.example.com;
+    return 301 https://$host$request_uri;
+}
