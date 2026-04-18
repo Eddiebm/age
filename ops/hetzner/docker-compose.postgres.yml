@@ -1,0 +1,32 @@
+# PostgreSQL on the same Hetzner VM (Docker). Binds to localhost only — not exposed publicly.
+#
+# 1. Add to /opt/age/.env (generate a strong password):
+#    POSTGRES_PASSWORD=your-long-random-secret
+#    DATABASE_URL=postgresql://age:${POSTGRES_PASSWORD}@127.0.0.1:5432/age
+#    (Use the actual password in DATABASE_URL, not ${...} — URL-encode if it has special chars.)
+#
+# 2. From /opt/age:
+#    docker compose -f ops/hetzner/docker-compose.postgres.yml up -d
+#
+# 3. Apply schema: cd /opt/age && npx prisma db push
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: age
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: age
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - age-pg-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U age -d age"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  age-pg-data:

@@ -21,11 +21,27 @@ sudo -u postgres psql -c "CREATE DATABASE age OWNER age;"
 
 `DATABASE_URL=postgresql://age:choose-a-strong-password@127.0.0.1:5432/age`
 
+**Option C — Docker on the same VPS (matches dev `postgres:16-alpine`; data in a volume)**
+
+Install Docker if needed (`apt install docker.io docker-compose-plugin` or Docker’s official repo), then:
+
+```bash
+cd /opt/age
+# Add POSTGRES_PASSWORD and DATABASE_URL to .env — see ops/hetzner/docker-compose.postgres.yml header
+openssl rand -base64 24   # use output as POSTGRES_PASSWORD
+nano .env   # POSTGRES_PASSWORD=...  and  DATABASE_URL=postgresql://age:THAT_PASSWORD@127.0.0.1:5432/age
+docker compose -f ops/hetzner/docker-compose.postgres.yml up -d
+docker compose -f ops/hetzner/docker-compose.postgres.yml ps
+```
+
+If the password contains `@ # :` etc., URL-encode it inside `DATABASE_URL` or use a password without those characters.
+
 Apply schema:
 
 ```bash
 cd /opt/age
-npx prisma db push
+./node_modules/.bin/prisma db push
+# or: npx prisma@6.3.1 db push   # pin major if npx would install Prisma 7+
 # or: npx prisma migrate deploy   # if you use migrations in CI
 ```
 

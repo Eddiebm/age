@@ -12,7 +12,7 @@ echo ">>> npm ci"
 npm ci
 
 echo ">>> prisma (schema to DB)"
-npx prisma db push
+./node_modules/.bin/prisma db push
 
 echo ">>> build"
 npm run build
