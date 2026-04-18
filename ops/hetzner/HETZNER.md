@@ -4,6 +4,8 @@ Your OpenClaw gateway runs as a **user systemd** service and listens on its own 
 
 **Server (from agent setup):** `ssh -i ~/.ssh/id_ed25519 root@5.78.183.141` — Ubuntu 24.04.
 
+**Example — `theworldagency.uk` (Cloudflare):** create an **`A`** record **`age`** → **`5.78.183.141`** (grey cloud / DNS-only for first TLS via certbot on the box). When `dig +short age.theworldagency.uk A` returns the IP, run `setup-nginx-tls.sh age.theworldagency.uk your@email.com`. Use apex `@` instead of `age` if you want `https://theworldagency.uk` only.
+
 ## 1. PostgreSQL
 
 AGE needs **`DATABASE_URL`** for users, workspaces, runs, posts, metrics, and Stripe state.
