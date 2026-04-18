@@ -49,6 +49,7 @@ Multi-tenant growth OS: **OAuth → workspaces → engine runs → Postgres → 
 
 - **Vercel / Railway-style:** set all env vars from `.env.example`; run **worker** as a separate long-lived process with the same env.
 - **Hetzner + OpenClaw:** [ops/hetzner/HETZNER.md](ops/hetzner/HETZNER.md) — Redis, **PostgreSQL**, systemd, nginx. Give **both** `age-web` and `age-worker` the same `.env` (including `DATABASE_URL`).
+- **Full production / domain / OAuth notes:** [docs/HANDBOOK.md](docs/HANDBOOK.md)
 
 ## Product features (high level)
 
