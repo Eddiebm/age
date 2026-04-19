@@ -114,6 +114,8 @@ Set at minimum:
 - `OPENROUTER_API_KEY` (recommended) or `OPENAI_API_KEY` — see `lib/llm.ts`
 - `REDIS_URL` (e.g. `redis://127.0.0.1:6379`)
 - `ZERNIO_API_KEY` + `ZERNIO_PROFILE_ID` **or** `ZERNIO_TARGETS_JSON` (optional; live posts via Zernio — preferred if set)
+  Key format: `sk_` followed by exactly **64 lowercase hex characters** (`^sk_[0-9a-f]{64}$`).
+  A start-up validator in `ops/hetzner/validate-zernio-key.sh` enforces this at every service start.
 - `AYRSHARE_API_KEY` (optional; only if Zernio unset)
 
 **Stripe (optional):** `STRIPE_SECRET_KEY`, `STRIPE_PRICE_PRO_MONTHLY`, `STRIPE_WEBHOOK_SECRET`, and configure a Stripe webhook endpoint → `https://your-domain/api/stripe/webhook`.
@@ -207,4 +209,5 @@ sudo bash /opt/age/ops/hetzner/deploy.sh
 |--------|--------|
 | API returns 500 on run | `journalctl -u age-web -n 80`; verify `OPENROUTER_API_KEY` or `OPENAI_API_KEY` and `REDIS_URL`. |
 | Jobs never publish | `age-worker` running? Redis up? `journalctl -u age-worker -n 80`. |
+| Zernio 401 on publish | Check `ZERNIO_API_KEY` in `/opt/age/.env`. Must match `^sk_[0-9a-f]{64}$`. If the key is a placeholder, export the real key and re-run `patch-oauth-env.sh`. |
 | Static assets 404 | Re-run `npm run build` (runs `postbuild`); ensure `WorkingDirectory` in `age-web.service` is `/opt/age/.next/standalone`. |
