@@ -19,6 +19,15 @@ if [[ ! -f "$ENV_FILE" ]]; then
   exit 1
 fi
 
+
+# Validate ZERNIO_API_KEY format if provided
+if [[ -n "${ZERNIO_API_KEY:-}" ]]; then
+  if ! printf '%s' "$ZERNIO_API_KEY" | grep -qE '^sk_[0-9a-f]{64}$'; then
+    echo "ERROR: ZERNIO_API_KEY does not match ^sk_[0-9a-f]{64}$ — refusing to write a malformed key." >&2
+    exit 1
+  fi
+fi
+
 python3 <<'PY'
 import os, re, sys
 
