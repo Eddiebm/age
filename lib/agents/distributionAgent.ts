@@ -1,12 +1,12 @@
 import axios from "axios";
+import { imageAgent, platformRequiresMedia } from "./imageAgent";
 
 export type DistributionResult = {
-  /**
-   * External publish id: Ayrshare post id, or Zernio post `_id` (same DB column).
-   */
   ayrsharePostId?: string;
   skipped?: boolean;
 };
+
+type ZernioTarget = { platform: string; accountId: string };
 
 function extractZernioPostId(data: Record<string, unknown>): string | undefined {
   const post = data.post as Record<string, unknown> | undefined;
@@ -17,45 +17,11 @@ function extractZernioPostId(data: Record<string, unknown>): string | undefined 
   return undefined;
 }
 
-async function distributeZernio(post: string): Promise<DistributionResult> {
-  const key = process.env.ZERNIO_API_KEY!.trim();
-  const base =
-    process.env.ZERNIO_API_BASE?.trim() || "https://zernio.com/api/v1";
-  const profileId = process.env.ZERNIO_PROFILE_ID?.trim();
-  const targetsJson = process.env.ZERNIO_TARGETS_JSON?.trim();
-
-  let payload: Record<string, unknown>;
-
-  if (targetsJson) {
-    let platforms: unknown;
-    try {
-      platforms = JSON.parse(targetsJson) as unknown;
-    } catch {
-      throw new Error("ZERNIO_TARGETS_JSON must be valid JSON");
-    }
-    if (!Array.isArray(platforms) || platforms.length === 0) {
-      throw new Error(
-        "ZERNIO_TARGETS_JSON must be a non-empty array of { platform, accountId }",
-      );
-    }
-    payload = {
-      content: post,
-      platforms,
-      publishNow: true,
-    };
-  } else if (profileId) {
-    payload = {
-      content: post,
-      queuedFromProfile: profileId,
-      publishNow: true,
-    };
-  } else {
-    console.warn(
-      "[distribution] ZERNIO_API_KEY set but need ZERNIO_PROFILE_ID or ZERNIO_TARGETS_JSON; skipping.",
-    );
-    return { skipped: true };
-  }
-
+async function postToZernio(
+  payload: Record<string, unknown>,
+  key: string,
+  base: string,
+): Promise<DistributionResult> {
   const res = await axios.post<Record<string, unknown>>(
     `${base.replace(/\/$/, "")}/posts`,
     payload,
@@ -74,8 +40,64 @@ async function distributeZernio(post: string): Promise<DistributionResult> {
     );
   }
 
-  const id = extractZernioPostId(res.data ?? {});
-  return { ayrsharePostId: id };
+  return { ayrsharePostId: extractZernioPostId(res.data ?? {}) };
+}
+
+async function distributeZernio(post: string): Promise<DistributionResult> {
+  const key = process.env.ZERNIO_API_KEY!.trim();
+  const base = process.env.ZERNIO_API_BASE?.trim() || "https://zernio.com/api/v1";
+  const profileId = process.env.ZERNIO_PROFILE_ID?.trim();
+  const targetsJson = process.env.ZERNIO_TARGETS_JSON?.trim();
+
+  if (targetsJson) {
+    let targets: unknown;
+    try {
+      targets = JSON.parse(targetsJson);
+    } catch {
+      throw new Error("ZERNIO_TARGETS_JSON must be valid JSON");
+    }
+    if (!Array.isArray(targets) || targets.length === 0) {
+      throw new Error("ZERNIO_TARGETS_JSON must be a non-empty array of { platform, accountId }");
+    }
+
+    const textTargets = (targets as ZernioTarget[]).filter(t => !platformRequiresMedia(t.platform));
+    const mediaTargets = (targets as ZernioTarget[]).filter(t => platformRequiresMedia(t.platform));
+
+    const jobs: Promise<DistributionResult>[] = [];
+
+    if (textTargets.length > 0) {
+      jobs.push(postToZernio({ content: post, platforms: textTargets, publishNow: true }, key, base));
+    }
+
+    if (mediaTargets.length > 0) {
+      jobs.push(
+        imageAgent(post)
+          .then(imageUrl =>
+            postToZernio({ content: post, platforms: mediaTargets, mediaUrls: [imageUrl], publishNow: true }, key, base)
+          )
+          .catch(err => {
+            console.error("[distribution] image generation failed, skipping media platforms:", err.message);
+            return { skipped: true } as DistributionResult;
+          })
+      );
+    }
+
+    const settled = await Promise.allSettled(jobs);
+    const firstSuccess = settled.find(
+      (r): r is PromiseFulfilledResult<DistributionResult> =>
+        r.status === "fulfilled" && !r.value.skipped,
+    );
+    if (firstSuccess) return firstSuccess.value;
+    const firstFail = settled.find(r => r.status === "rejected") as PromiseRejectedResult | undefined;
+    if (firstFail) throw firstFail.reason;
+    return { skipped: true };
+
+  } else if (profileId) {
+    return postToZernio({ content: post, queuedFromProfile: profileId, publishNow: true }, key, base);
+  } else {
+    console.warn("[distribution] ZERNIO_API_KEY set but need ZERNIO_PROFILE_ID or ZERNIO_TARGETS_JSON; skipping.");
+    return { skipped: true };
+  }
 }
 
 async function distributeAyrshare(post: string): Promise<DistributionResult> {
@@ -108,9 +130,7 @@ async function distributeAyrshare(post: string): Promise<DistributionResult> {
   return { ayrsharePostId: id };
 }
 
-export async function distributionAgent(
-  post: string,
-): Promise<DistributionResult> {
+export async function distributionAgent(post: string): Promise<DistributionResult> {
   console.log("[distribution] posting:", post.slice(0, 120));
 
   const zernioKey = process.env.ZERNIO_API_KEY?.trim();
@@ -125,8 +145,6 @@ export async function distributionAgent(
     return distributeAyrshare(post);
   }
 
-  console.warn(
-    "[distribution] Neither ZERNIO_API_KEY nor AYRSHARE_API_KEY set; skipping live publish (dev mode).",
-  );
+  console.warn("[distribution] Neither ZERNIO_API_KEY nor AYRSHARE_API_KEY set; skipping live publish (dev mode).");
   return { skipped: true };
 }
