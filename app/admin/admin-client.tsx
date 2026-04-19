@@ -5,7 +5,8 @@ import { useState } from "react";
 type User = { id: string; name: string | null; email: string | null; image: string | null; accounts: { provider: string }[]; memberships: { role: string; workspaceId: string }[] };
 type Workspace = { id: string; name: string; slug: string; plan: string; createdAt: string; members: { role: string; user: { email: string | null; name: string | null } }[]; _count: { runs: number } };
 type Run = { id: string; topic: string; status: string; createdAt: string; workspace: { name: string; slug: string }; _count: { posts: number } };
-type Post = { id: string; body: string; status: string; score: number | null; ayrsharePostId: string | null; run: { workspaceId: string; topic: string }; metrics: { impressions: number; engagement: number }[] };
+type PlatformUrl = { platform: string; url: string; status: string; publishedAt: string | null };
+type Post = { id: string; body: string; status: string; score: number | null; ayrsharePostId: string | null; platformUrls: PlatformUrl[] | null; run: { workspaceId: string; topic: string }; metrics: { impressions: number; engagement: number }[] };
 
 type Tab = "users" | "workspaces" | "runs" | "posts";
 
@@ -130,6 +131,7 @@ export function AdminClient({ users, workspaces, runs, posts }: { users: User[];
               <th className="pb-3 text-left">Body</th>
               <th className="pb-3 text-left">Status</th>
               <th className="pb-3 text-left">Score</th>
+              <th className="pb-3 text-left">Live Links</th>
               <th className="pb-3 text-left">Impressions</th>
               <th className="pb-3 text-left">Engagement</th>
             </tr></thead>
@@ -141,6 +143,18 @@ export function AdminClient({ users, workspaces, runs, posts }: { users: User[];
                 </td>
                 <td className="py-3"><span className={`px-2 py-0.5 rounded text-xs ${p.status === "published" ? "bg-green-500/20 text-green-400" : p.status === "failed" ? "bg-red-500/20 text-red-400" : p.status === "queued" ? "bg-blue-500/20 text-blue-400" : "bg-zinc-800 text-zinc-400"}`}>{p.status}</span></td>
                 <td className="py-3 text-zinc-400">{p.score ?? "—"}</td>
+                <td className="py-3">
+                  {p.platformUrls && p.platformUrls.length > 0 ? (
+                    <div className="flex gap-1 flex-wrap">
+                      {p.platformUrls.map((pu, i) => (
+                        <a key={i} href={pu.url} target="_blank" rel="noopener noreferrer"
+                          className="px-2 py-0.5 rounded text-xs font-medium bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 transition-colors">
+                          {pu.platform}
+                        </a>
+                      ))}
+                    </div>
+                  ) : <span className="text-zinc-600 text-xs">—</span>}
+                </td>
                 <td className="py-3 text-zinc-400">{p.metrics[0]?.impressions ?? "—"}</td>
                 <td className="py-3 text-zinc-400">{p.metrics[0] ? `${(p.metrics[0].engagement * 100).toFixed(1)}%` : "—"}</td>
               </tr>

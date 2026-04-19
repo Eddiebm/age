@@ -129,6 +129,8 @@ model GeneratedPost {
   status          String
   /// Top-level id returned by Ayrshare /api/post (for analytics).
   ayrsharePostId  String?
+  /// JSON array of { platform, url, publishedAt } from Zernio webhook
+  platformUrls    Json?
 
   metrics PostMetric[]
 }
