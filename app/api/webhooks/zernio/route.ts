@@ -6,14 +6,14 @@ export const dynamic = "force-dynamic";
 type ZernioPlatformResult = {
   platform: string;
   status: string;
-  platformPostUrl?: string;
-  publishedAt?: string;
+  publishedUrl?: string;
+  platformPostId?: string;
 };
 
 type ZernioWebhookPayload = {
   event?: string;
   post?: {
-    _id?: string;
+    id?: string;
     status?: string;
     platforms?: ZernioPlatformResult[];
   };
@@ -27,7 +27,7 @@ export async function POST(req: Request) {
     return Response.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  const zernioPostId = body?.post?._id;
+  const zernioPostId = body?.post?.id;
   const platforms = body?.post?.platforms;
 
   if (!zernioPostId || !Array.isArray(platforms)) {
@@ -35,12 +35,12 @@ export async function POST(req: Request) {
   }
 
   const platformUrls = platforms
-    .filter(p => p.platformPostUrl)
+    .filter(p => p.publishedUrl)
     .map(p => ({
       platform: p.platform,
-      url: p.platformPostUrl!,
+      url: p.publishedUrl!,
       status: p.status,
-      publishedAt: p.publishedAt ?? null,
+      platformPostId: p.platformPostId ?? null,
     }));
 
   if (platformUrls.length === 0) {
@@ -52,6 +52,5 @@ export async function POST(req: Request) {
     data: { platformUrls },
   });
 
-  console.log(`[zernio webhook] saved ${platformUrls.length} platform URLs for post ${zernioPostId}`);
   return Response.json({ received: true, saved: platformUrls.length });
 }
